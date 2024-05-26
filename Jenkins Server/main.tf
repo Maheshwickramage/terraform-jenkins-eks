@@ -32,7 +32,7 @@ module "sg" {
   ingress_with_cidr_blocks = [
     {
       from_port   = 8080
-      to_port     = 8081
+      to_port     = 8080
       protocol    = "tcp"
       description = "HTTP"
       cidr_blocks = "0.0.0.0/0"
@@ -62,3 +62,23 @@ module "sg" {
 
 
 #EC2
+module "ec2_instance" {
+  source = "terraform-aws-modules/ec2-instance/aws"
+
+  name = "Jenkins-Server"
+
+  instance_type               = var.instance_type
+  key_name                    = "nodejs_api_test"
+  monitoring                  = true
+  vpc_security_group_ids      = [module.sg.security_group_id]
+  subnet_id                   = module.vpc.public_subnets[0]
+  associate_public_ip_address = true
+  user_data                   = file("jenkins-install.sh")
+  availability_zone           = data.aws_availability_zones.azs.names[0]
+
+  tags = {
+    Name        = "Jenkins-Server"
+    Terraform   = "true"
+    Environment = "dev"
+  }
+}
